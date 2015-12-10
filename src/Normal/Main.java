@@ -7,24 +7,22 @@ import java.lang.annotation.Target;
 import java.lang.reflect.*;
 import java.util.*;
 
-class GenericClass<T>
-{
+class GenericClass<T> {
     T value;
-    GenericClass(T value)
-    {
+
+    GenericClass(T value) {
         this.value = value;
     }
-    void print()
-    {
+
+    void print() {
         System.out.println(value);
 
     }
-    T getValue()
-    {
-        return (T)value;
+
+    T getValue() {
+        return (T) value;
     }
 }
-
 
 class DataRowNew
 {
@@ -62,28 +60,25 @@ class DataRowNew
     }
 }
 
-class DataRow
-{
-    Map<Class<?>,Object> map = new HashMap<>();
-    <T> void putField(Class<T> type, T value)
-    {
+class DataRow {
+    Map<Class<?>, Object> map = new HashMap<>();
+
+    <T> void putField(Class<T> type, T value) {
         map.put(type, value);
     }
-    <T> T getField(Class<T> type)
-    {
+
+    <T> T getField(Class<T> type) {
         return type.cast(map.get(type));
     }
 }
 
-class ClassA<T>
-{
+class ClassA<T> {
     public T value;
-    public  List<String> str = new ArrayList<>();
+    public List<String> str = new ArrayList<>();
 
     @TestAnnotation(type = TestAnnotation.CheckType.Exception, value = Exception.class)
-    public  Collection<T> handle(T a, String b)
-    {
-        if(a.toString() != "Leon")
+    public Collection<T> handle(T a, String b) {
+        if (a.toString() != "Leon")
             throw new RuntimeException("just a runtime Exception for test");
         System.out.println("In Class A");
         System.out.println(a);
@@ -91,141 +86,137 @@ class ClassA<T>
         return null;
     }
 
-    @TestAnnotation(type= TestAnnotation.CheckType.Boolean,value=Exception.class)
-    public int m2()
-    {
+    @TestAnnotation(type = TestAnnotation.CheckType.Boolean, value = Exception.class)
+    public int m2() {
         return -1;
     }
 
     @TestAnnotation(type = TestAnnotation.CheckType.Boolean, value = Exception.class)
-    public boolean m3()
-    {
+    public boolean m3() {
         return true;
     }
 
 }
 
-class ClassB extends ClassA
-{
+class ClassB extends ClassA {
 
 
 }
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@interface TestAnnotation
-{
-    enum CheckType{Exception,Boolean}
+@interface TestAnnotation {
+    enum CheckType {Exception, Boolean}
+
     CheckType type() default CheckType.Boolean;
+
     Class<? extends Exception> value();
 }
 
 
-public class Main
-{
-    public static void printVariable(String... args)
-    {
-        for(String s : args)
-        {
+public class Main {
+    public static void printVariable(String... args) {
+        for (String s : args) {
             System.out.println(s);
         }
     }
 
-    public static void main(String[] args) throws Exception
-    {
-        int i = 0;
-        try
-        {
-            i = 33;
-            throw new RuntimeException("haha");
-        }catch (Exception e)
-        {
-            System.out.println(i);
+    static class Boo {
+        final int number = 3;
+
+        void addAll() {
+            System.out.println("in boo addAll");
+            this.add();
         }
 
+        void add() {
+            System.out.println("in boo add");
+        }
     }
 
-    void foo() throws RuntimeException
-    {
+    static class Doo extends Boo {
+
+        @Override
+        void addAll() {
+            super.addAll();
+        }
+
+        @Override
+        void add() {
+            System.out.println("in Doo addl");
+            super.addAll();
+        }
+    }
+
+
+    public static void main(String[] args) throws Exception {
+        Boo b = new Doo();
+        //b.add();
+        b.addAll();
 
     }
 
-    static void simpleTest() throws Exception
-    {
+    void foo() throws RuntimeException {
+
+    }
+
+    static void simpleTest() throws Exception {
         int notTested = 0;
         int tested = 0;
         int passed = 0;
         Method[] ms = ClassA.class.getDeclaredMethods();
         ClassA a = ClassA.class.newInstance();
-        for(Method m : ms)
-        {
-            if(m.isAnnotationPresent(TestAnnotation.class))
-            {
+        for (Method m : ms) {
+            if (m.isAnnotationPresent(TestAnnotation.class)) {
                 TestAnnotation test = m.getAnnotation(TestAnnotation.class);
-                if(test.type() == TestAnnotation.CheckType.Boolean && m.getReturnType() == boolean.class)
-                {
+                if (test.type() == TestAnnotation.CheckType.Boolean && m.getReturnType() == boolean.class) {
                     tested++;
-                    if((boolean)m.invoke(a))
-                    {
+                    if ((boolean) m.invoke(a)) {
                         passed++;
-                        System.out.format("%s pass the test %n",m.toGenericString());
+                        System.out.format("%s pass the test %n", m.toGenericString());
+                    } else {
+                        System.out.format("%s doesn't pass the test %n", m.toGenericString());
                     }
-                    else
-                    {
-                        System.out.format("%s doesn't pass the test %n",m.toGenericString());
-                    }
-                }
-                else if(test.type() == TestAnnotation.CheckType.Exception && m.getParameterTypes().length == 2)
-                {
+                } else if (test.type() == TestAnnotation.CheckType.Exception && m.getParameterTypes().length == 2) {
                     tested++;
-                    if(InvokeMethod(a,m,test.value(),"Leon","Lazuli"))
-                    {
+                    if (InvokeMethod(a, m, test.value(), "Leon", "Lazuli")) {
                         passed++;
                     }
                     tested++;
-                    if(InvokeMethod(a,m,test.value(),"Jack","Spriraw"));
+                    if (InvokeMethod(a, m, test.value(), "Jack", "Spriraw")) ;
                     passed++;
-                }
-                else
-                {
+                } else {
                     notTested++;
                 }
             }
         }
         System.out.printf("tested:%d, passed:%d, noteTest:%d %n", tested, passed, notTested);
     }
-    public static boolean InvokeMethod(Object obj, Method m, Class<? extends Exception> expectedException, Object...args)
-    {
+
+    public static boolean InvokeMethod(Object obj, Method m, Class<? extends Exception> expectedException, Object... args) {
         boolean passed = false;
         try {
             m.setAccessible(true);
-            m.invoke(obj,args);
-        }catch (InvocationTargetException wrappedEX)
-        {
-            if(expectedException.isInstance(wrappedEX.getCause()))
-            {
+            m.invoke(obj, args);
+        } catch (InvocationTargetException wrappedEX) {
+            if (expectedException.isInstance(wrappedEX.getCause())) {
                 passed = true;
             }
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
 
-        }finally {
+        } finally {
 
         }
 
         StringBuilder sb = new StringBuilder();
-        for(int i = 0; i < args.length; i++)
-        {
+        for (int i = 0; i < args.length; i++) {
             sb.append(args[i]);
             sb.append(" ");
         }
-        if(passed)
-        {
-            System.out.printf("%s throw %s as expected with parameter %s, Pass! %n",m.toGenericString(),expectedException.toGenericString(), sb.toString());
-        }
-        else
-        {
-            System.out.printf("%s doesn't throw %s as expected with parameter %s , NOT Pass!%n",m.toGenericString(),expectedException.toGenericString(), sb.toString());
+        if (passed) {
+            System.out.printf("%s throw %s as expected with parameter %s, Pass! %n", m.toGenericString(), expectedException.toGenericString(), sb.toString());
+        } else {
+            System.out.printf("%s doesn't throw %s as expected with parameter %s , NOT Pass!%n", m.toGenericString(), expectedException.toGenericString(), sb.toString());
         }
 
         return passed;
