@@ -5,6 +5,7 @@ import java.util.*;
 
 /**
  * Created by Leon on 2015/12/9.
+ * 测试注册回调导致的Memory Leak 以及 weak reference
  */
 public class MemoryLeakByObsoleteReference {
 

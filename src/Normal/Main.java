@@ -25,46 +25,40 @@ class GenericClass<T>
     }
 }
 
-class Column<T>
-{
-    Class<T> type;
-    String name;
-    List<T> entitys;
-    Column(Class<T> type, String name)
-    {
-        this.type = type;
-        this.name = name;
-        entitys = new ArrayList<>();
-    }
-    void addEntity(T value)
-    {
-        entitys.add(value);
-    }
-    T get(int index)
-    {
-        return entitys.get(index);
-    }
-}
 
 class DataRowNew
 {
-    Map<String,Column<?>> map = new HashMap<String, Column<?>>();
-    <T> void putField(String columnName, T value)
+    private class Column  // 不需要用泛型了
     {
-        Column temp = map.get(columnName);
-        if(temp == null)
+        String name;
+        Object value;
+        Column(String name)
         {
-            temp = new Column(value.getClass(),columnName);
-            map.put(columnName,temp);
+            this.name = name;
         }
-        Column<T> c = temp; // 这里不检查类型的话会报错的。不会，泛型转换在运行期就是rawtype
-        if(c.type != value.getClass())
-            throw new RuntimeException("Bad type to add");
-        c.addEntity(value);
     }
-    <T> Column<T> getField(String columnName)
+
+    Map<String,Column> map = new HashMap<>(); // name to column
+    //Map<String,Class<?>> nameToTypeMap = new HashMap<>(); // 没用，必须get的时候显示传T，这样才能做类型推导和自动转换
+    <T> void putField(Class<T> type,String columnName, T value)
     {
-        return (Column<T>)map.get(columnName);
+        Column c = map.get(toString());
+        if(c == null){
+            c = new Column(columnName);
+            map.put(columnName,c);
+            //nameToTypeMap.put(columnName, type);
+        }
+        c.value = value;
+
+    }
+    <T> T getField(String columnName, Class<T> t)  // 这里必须传个Class<T> 否则无法类型推断
+    {
+        Column c = map.get(columnName);
+        if(c != null){
+            //Class<?> type = nameToTypeMap.get(columnName);  // 这个类型是没有用
+            return t.cast(c.value);  // T cast()  T 和 T 符合，所以可以自动转换。
+        }
+        return null;
     }
 }
 
