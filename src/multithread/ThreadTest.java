@@ -1,4 +1,5 @@
-import java.sql.BatchUpdateException;
+package multithread;
+
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 

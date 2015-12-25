@@ -10,7 +10,6 @@ public class EnumSetAndTableTest
 {
     public static void main(String[] args){
         Text.test();
-        Set
     }    
 }
 

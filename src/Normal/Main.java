@@ -26,6 +26,7 @@ class GenericClass<T>
 }
 
 
+
 class DataRowNew
 {
     private class Column  // 不需要用泛型了
@@ -133,16 +134,13 @@ public class Main
 
     public static void main(String[] args) throws Exception
     {
+        long start = System.currentTimeMillis();
         int i = 0;
-        try
-        {
-            i = 33;
-            throw new RuntimeException("haha");
-        }catch (Exception e)
-        {
-            System.out.println(i);
-        }
-
+        int j = 0;
+        while(++i > 0){j = i;}
+        long duration = System.currentTimeMillis() - start;
+        System.out.println(duration);
+        System.out.println(j);
     }
 
     void foo() throws RuntimeException
@@ -192,6 +190,7 @@ public class Main
                 }
             }
         }
+        
         System.out.printf("tested:%d, passed:%d, noteTest:%d %n", tested, passed, notTested);
     }
     public static boolean InvokeMethod(Object obj, Method m, Class<? extends Exception> expectedException, Object...args)
