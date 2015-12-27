@@ -1,5 +1,4 @@
 package normal;
-import sun.plugin.com.event.COMEventHandler;
 
 import java.lang.*;
 import java.util.*;
