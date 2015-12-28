@@ -4,6 +4,8 @@ import sun.java2d.loops.GraphicsPrimitive;
 
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by leonlazuli on 2015-09-26.
@@ -92,9 +94,9 @@ public class producerConsumer {
     /*
        这里用两个lock来模拟semaphore.
        !!! 实践证明这里并不能这样做,是因为notify必须是在已经获得了这个锁的基础上. 而producer consumer中, notify的是另一个锁,所以不能用这种方式来模拟.
+       虽然可以在notify的时候先获得另一个锁再notify, 两种锁需要操作同一个变量(比如代表这里代表buffer大小的n), 对n的操作必须是原子性的,所以需要另一个锁在做这件事情,
+       但是这样又会出现同样的问题,先require了锁,然后require empty(或者full), 然后empty.wait(),
     */
-    final static Object semaphoreEmpty = new Object();  //TODO  如果确认不是this的问题,还是把这两个东西放回去.
-    final static Object semaphoreFull = new Object();
     private static class ProductQueue_Semaphore implements IProductQueue
     {
         int n;
@@ -102,7 +104,10 @@ public class producerConsumer {
         int rear;
         final int capacity;
         final Object mutex = new Object();
-
+        final static Object semaphoreEmpty = new Object();  //TODO  如果确认不是this的问题,还是把这两个东西放回去.
+        final static Object semaphoreFull = new Object();
+        Lock lock = new ReentrantLock();
+        int nForSemaphore = 0;
         String[] buffer;
 
         public ProductQueue_Semaphore(int capacity){
@@ -117,43 +122,63 @@ public class producerConsumer {
         }
 
         public void put(String product) {
-            if (n == capacity) {
-                synchronized (semaphoreFull) {
-                    try {
-                        semaphoreFull.wait();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+            lock.lock();
+            try {
+                if(nForSemaphore == capacity) {
+                    synchronized (semaphoreFull) {
+                        try {
+                            lock.unlock();
+                            semaphoreFull.wait();
+                            lock.lock();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
+                nForSemaphore++;
+            }finally {
+                lock.unlock();
+            }
 
-                synchronized (mutex) {
-                    buffer[rear] = product;
-                    rear = round(rear);
-                    ++n;
-                    System.out.printf("%d %n", n);
-                }
-                semaphoreEmpty.notifyAll(); // 这里不能这样用,因为并没有获得empty的锁,所以也不能notify.
+            synchronized (this) {
+                buffer[rear] = product;
+                rear = round(rear);
+                ++n;
+                System.out.printf("%d %n", n);
+            }
+
+            synchronized (semaphoreEmpty) {
+                semaphoreEmpty.notify(); // 这里不能这样用,因为并没有获得empty的锁,所以也不能notify.
             }
         }
 
-        public synchronized String get(){
-            if(n == 0) {
-                synchronized (semaphoreEmpty) {
-                    try {
-                        semaphoreEmpty.wait();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+        public String get(){
+            lock.lock();
+            try{
+                if(nForSemaphore == 0)
+                    synchronized (semaphoreEmpty) {
+                        try {
+                            lock.unlock();
+                            semaphoreEmpty.wait();
+                            lock.lock();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                     }
-                }
+                nForSemaphore--;
+            }finally {
+                lock.unlock();
             }
             String ret;
-            synchronized (mutex){
+            synchronized (this){
                 ret = buffer[front];
                 front = round(front);
                 --n;
                 System.out.printf("%d %n", n);
             }
-            semaphoreFull.notifyAll();
+            synchronized (semaphoreFull) {
+                semaphoreFull.notify();
+            }
             return ret;
         }
 
@@ -164,7 +189,7 @@ public class producerConsumer {
     //------
 
 
-    private static IProductQueue queue = new ProductQueue(10);
+    private static IProductQueue queue = new ProductQueue_Semaphore(1);
     private static Random random = new Random();
 
     public static void main(String[] args){
