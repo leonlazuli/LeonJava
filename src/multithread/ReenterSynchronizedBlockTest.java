@@ -10,7 +10,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class ReenterSynchronizedBlockTest {
     static Object lock = new Object();
-    CopyOnWriteArrayList
 
     static void inner(){
         synchronized (lock){

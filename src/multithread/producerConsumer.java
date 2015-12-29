@@ -10,20 +10,20 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * Created by leonlazuli on 2015-09-26.
  */
-public class producerConsumer {
+public class producerConsumer{
 
-    interface IProductQueue{
-        void put(String product);
-        String get();
+    interface IProductQueue<T>{
+        void put(T product);
+        T get();
     }
 
-    private static class ProductQueue implements IProductQueue
+    private static class ProductQueue<T> implements IProductQueue<T>
     {
         int n;
         int front;
         int rear;
         final int capacity;
-        String[] buffer;
+        T[] buffer;
 
         public ProductQueue(int capacity){
             if(capacity < 1){
@@ -31,12 +31,12 @@ public class producerConsumer {
             }
             this.capacity = capacity;
             this.n = 0;
-            this.buffer = new String[capacity];
+            this.buffer = (T[])new Object[capacity];
             this.front = 0;
             this.rear = 0;
         }
 
-        public synchronized void put(String product){
+        public synchronized void put(T product){
             /* 这里,wait暂时释放this的锁,挂起,等待被唤醒. 而唤醒之后,如果n依然==capacity的话,会继续挂起.
              所以真正"继续执行"的条件是n!=capacity. 也就是说,producer是可能被另一个producer的notifyfAll()唤醒,
              但是检测while loop 条件不满足之后又挂起了.这里 n == capacity 和 n == 0, 和C semaphore中的empty full有点像,
@@ -59,7 +59,6 @@ public class producerConsumer {
             buffer[rear] = product;
             rear = round(rear);
             ++n;
-            System.out.printf("%d %n", n);
 
             /*
             * 这里一定要用NotifyAll()的原因就在于,唤醒的不一定是"能继续执行"的线程,可能唤醒之后就立刻继续休眠了.比如被get唤醒的是另一个get,那么这个while检测到
@@ -69,7 +68,7 @@ public class producerConsumer {
             notifyAll();
         }
 
-        public synchronized String get(){
+        public synchronized T get(){
             while (n == 0){
                 try {
                     wait();
@@ -77,10 +76,9 @@ public class producerConsumer {
                     e.printStackTrace();
                 }
             }
-            String ret = buffer[front];
+            T ret = buffer[front];
             front = round(front);
             --n;
-            System.out.printf("%d %n", n);
             notifyAll();
             return ret;
         }
@@ -101,7 +99,7 @@ public class producerConsumer {
        这样就是可以的。但是依然要用到while loop来等待能够继续执行的条件（因为wait打断了逻辑控制流，程序逻辑很难保证
        唤醒之后条件还成立，所以用while更加鲁棒）。
     */
-    private static class ProductQueue_Semaphore implements IProductQueue
+    private static class ProductQueue_Semaphore<T> implements IProductQueue<T>
     {
         int n;
         int front;
@@ -112,7 +110,7 @@ public class producerConsumer {
         final static Object semaphoreFull = new Object();
         volatile int empty;
         volatile int full = 0;
-        String[] buffer;
+        T[] buffer;
 
         public ProductQueue_Semaphore(int capacity){
             if(capacity < 1){
@@ -122,12 +120,12 @@ public class producerConsumer {
             this.n = 0;
             this.empty = capacity;
             this.full = 0;
-            this.buffer = new String[capacity];
+            this.buffer = (T[])new Object[capacity];
             this.front = 0;
             this.rear = 0;
         }
 
-        public void put(String product) {
+        public void put(T product) {
             synchronized (semaphoreEmpty)
             {
                 /* 这里有可能被唤醒之后，empty还是0，所以还是要用while
@@ -144,6 +142,10 @@ public class producerConsumer {
                          //最直观的是，wait返回之后，上面的empty=0的条件不一定为真了
                         // 要程序逻辑来保证是非常困难的，所以最好还是用while的形式
                         semaphoreEmpty.wait();
+                        // wait被notify之后，就正常地竞争锁，所以可能一个线程竞争到了锁
+                        // 继续执行结束，释放了锁。然后另一个从wait被notify的线程得到了锁，
+                        // 那么它就不是说因为上一个nofify而得到的锁，所以就不能保证empty是被++过的
+                        // 就导致了得到的了empty可能是0.（被上一个从wait返回的线程减过了）
                         System.out.printf("%d awake, empty = %d %n", Thread.currentThread().getId(), empty);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
@@ -167,7 +169,7 @@ public class producerConsumer {
             }
         }
 
-        public String get(){
+        public T get(){
             synchronized (semaphoreFull)
             {
                 while (full == 0) {
@@ -180,7 +182,7 @@ public class producerConsumer {
                 full--;
                 //System.out.printf("full is: %d %n", full);
             }
-            String ret;
+            T ret;
             synchronized (this){
                 ret = buffer[front];
                 front = round(front);
@@ -203,11 +205,11 @@ public class producerConsumer {
     //------
 
 
-    private static IProductQueue queue = new ProductQueue_Semaphore(1);
+private static IProductQueue<String> queue = new ProductQueue<String>(1);
     private static Random random = new Random();
 
     public static void main(String[] args){
-        final int nProducer = 10;
+        final int nProducer = 1;
         final int nComsumer = 10;
 
         for(int i = 0; i < nProducer; i++){
@@ -216,7 +218,7 @@ public class producerConsumer {
                     while (true){
                         String product = String.format("%f",random.nextFloat());
                         queue.put(product);
-                        //System.out.printf("producer %d produce product: %s %n", id, product);
+                        System.out.printf("producer %d produce product: %s %n", id, product);
                         try {
                             TimeUnit.MILLISECONDS.sleep(random.nextInt(nComsumer) + nComsumer);
                         } catch (InterruptedException e) {
@@ -232,7 +234,7 @@ public class producerConsumer {
             Thread tc = new Thread(()->{
                     while(true) {
                         String product = queue.get();
-                        //System.out.printf("comsumer %d consume product: %s %n", id, product);
+                        System.out.printf("comsumer %d consume product: %s %n", id, product);
                         try {
                             TimeUnit.MILLISECONDS.sleep(random.nextInt(nProducer) + nProducer);
                         } catch (InterruptedException e) {
