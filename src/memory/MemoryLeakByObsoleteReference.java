@@ -5,7 +5,9 @@ import java.util.*;
 
 /**
  * Created by Leon on 2015/12/9.
- * ����ע��ص����µ�Memory Leak �Լ� weak reference
+ * ����ע��ص����µ�Memory Leak �Լ� weak reference
+ * 主要测试的是注册eventHandler之后, 对于它的引用会造成内存泄露
+ * 用weakReference可以解决这一点.  但实际上用weakHashTable会更好,因为虽然多了无用的value(比如存个true)什么的, 但是hash的读取速度是常数的.
  */
 public class MemoryLeakByObsoleteReference {
 
