@@ -10,7 +10,7 @@ import com.sun.javaws.exceptions.InvalidArgumentException;
  */
 public class CountDownLatch {
     private int count;
-    private final Object lock = new Object();
+    private final Object lock = new Object(); // 私有锁，防止外部代码恶意或者无意的持有CountDownLatch本身的锁。
     public CountDownLatch(int init){
         if(init <= 0){
             throw new IllegalArgumentException("count must be positive ");
@@ -39,7 +39,6 @@ public class CountDownLatch {
 
     public static void main(String[] args){
         final int nThread  = 3;
-        Thread[] threads = new Thread[nThread];
         CountDownLatch ready = new CountDownLatch(nThread);
         CountDownLatch start = new CountDownLatch(1);
 
