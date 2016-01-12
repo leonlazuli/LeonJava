@@ -84,6 +84,7 @@ class ClassA<T> {
         System.out.println("In Class A");
         System.out.println(a);
         System.out.println(b);
+        this.getClass().getClassLoader()
         return null;
     }
 
