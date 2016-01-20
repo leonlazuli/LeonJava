@@ -1,3 +1,5 @@
+import java.util.Vector;
+
 public class TestClass2
 {
 // linux iss#33 
@@ -13,6 +15,6 @@ public class TestClass2
 
     public void foo()
     {
-
+        Vector
     }
 }

@@ -88,7 +88,7 @@ public class OutOfMemoryTest {
     }
 
     public static void main(String[] args){
-        catString();
+        heapOOM();
     }
 
 }

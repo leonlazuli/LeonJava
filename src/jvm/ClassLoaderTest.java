@@ -59,7 +59,6 @@ public class ClassLoaderTest {
 
     public static void main(String[] args)throws Exception{
         //ClassLoaderTest类是由默认加载器加载的.
-
         Class c = leonLoader.loadClass("jvm.ClassLoaderTest$LeonSpokesman");
         ISay obj = (ISay) c.newInstance();
         ISay obj2 = new LeonSpokesman();
