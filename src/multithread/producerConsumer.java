@@ -9,6 +9,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by leonlazuli on 2015-09-26.
+ * 首先自己实现BlockQueue来做，然后尝试自己实现Semaphore来做，具体的坑见下面的注释。
  */
 public class producerConsumer{
 

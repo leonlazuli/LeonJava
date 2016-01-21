@@ -1,4 +1,11 @@
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Vector;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.Semaphore;
 
 public class TestClass2
 {
@@ -15,6 +22,6 @@ public class TestClass2
 
     public void foo()
     {
-        Vector
+        Hashtable t = new Hashtable();
     }
 }
