@@ -1,11 +1,5 @@
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Vector;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.Semaphore;
+import java.util.*;
+import java.util.concurrent.*;
 
 public class TestClass2
 {
@@ -23,5 +17,13 @@ public class TestClass2
     public void foo()
     {
         Hashtable t = new Hashtable();
+        BlockingQueue<String> bq = new ArrayBlockingQueue<String>(10);
+        Callable<String> c = ()->{return "helllo";};
+        ExecutorService e = Executors.newFixedThreadPool(10);
+        Thread tt = new Thread();
+        tt.run();
+        Thread.interrupted();
+
+
     }
 }
