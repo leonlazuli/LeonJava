@@ -18,7 +18,7 @@ public class UseSingleExcutorDeadLock {
 
         Future<String> f1;
 
-//        f1 = exec.submit(r);  // 这里没有死锁,看看书上的例子是为啥死锁了
+//        f1 = exec.submit(r);  // 这里没有死锁,看看书上的例子是为啥死锁了,书上是因为提交f1 f2的本身也是个任务
 //        f2 = exec.submit(r);
 
         f1 = exec.submit(()->{
