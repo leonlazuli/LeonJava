@@ -24,7 +24,7 @@ public class ConcurrentStack<E> {
         }
     }
 
-    /* 这种写法相对于上面那种写法更容易理解
+    /* 这种写法相对于上面那种写法更容易理解，而且更有普遍性
         先把要做的改动做好，然后用CompareAndSet来看
         其他线程时候干扰了，如果没有干扰，就向共享变量
         提交改动，否则重试。反正改动都是在本地的，所以
@@ -52,7 +52,7 @@ public class ConcurrentStack<E> {
             }
         }
     }
-    
+
     private static class Node<E>{
         public final E value;
         public Node<E> next;
