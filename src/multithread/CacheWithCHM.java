@@ -1,7 +1,5 @@
 package multithread;
 
-import normal.Main;
-
 import java.math.BigInteger;
 import java.util.Map;
 import java.util.concurrent.*;
