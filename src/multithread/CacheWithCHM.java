@@ -15,6 +15,7 @@ public class CacheWithCHM {
     }
 
     static class ExpensiveFunction implements IComputerable<String, BigInteger>{
+        ExpensiveFunction(){}
         @Override
         public BigInteger compute(String arg){
             // 模拟长时间计算
