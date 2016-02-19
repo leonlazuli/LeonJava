@@ -44,12 +44,19 @@ public class ClassLoaderTest {
                 InputStream is = getClass().getResourceAsStream(fileName);
 
                 // ## 这里HardCode,强制只用这个类加载器加载Spokesman类,其他的全部委托的给默认加载器
-                if(is == null || !name.contains("Spokesman")){
+                if(is == null || (!name.contains("Spokesman") )){
                     return super.loadClass(name);
                 }
+//                 //## 这里 ！name.contains("ISay") 导致了会通过LeonClassLoader来加载ISay，
+//                // 所以下面就会报java.lang.ClassCastException: jvm.ClassLoaderTest$LeonSpokesman cannot be cast to jvm.ClassLoaderTest$ISay
+//                // 的错误，因为虽然两个类型是相同的，但是代码中的ISay是由默认加载器加载的，而newInstance出来的对象的父类ISay则是由LeonClassLoader加载的
+//                if(is == null || (!name.contains("Spokesman") && !name.contains("ISay"))){
+//                    return super.loadClass(name);
+//                }
+                System.out.printf("do load %s %n",name);
                 byte[] b = new byte[is.available()];
                 is.read(b);
-                return defineClass(name,b,0,b.length);
+                return defineClass(name, b, 0, b.length);
             }catch (IOException e){
                 throw new ClassNotFoundException(name);
             }
@@ -65,7 +72,7 @@ public class ClassLoaderTest {
         System.out.println(obj.getClass().getClassLoader().getClass().getName());
         System.out.println(obj2.getClass().getClassLoader().getClass().getName());
         obj2.say();
-        obj.say();
+        obj.say(); // 这里会报错，是因为ClassLoaderTest是在默认加载器中加载的，而obj的类是在LeonClassLoader中加载的，所以obj的方法不能访问data这个静态数据
         //System.out.println(c.getName());
         //System.out.println(c.getClassLoader().getClass().getName());
 
